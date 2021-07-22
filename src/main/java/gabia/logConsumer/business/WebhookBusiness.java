@@ -5,17 +5,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import gabia.logConsumer.dto.ParsedLogDTO;
-import gabia.logConsumer.dto.SlackDTO;
 import gabia.logConsumer.dto.WebhookDTO;
 import gabia.logConsumer.dto.WebhookMessage;
-import gabia.logConsumer.entity.Enum.WebhookEndpoint;
 import gabia.logConsumer.entity.WebhookSubscription;
 import gabia.logConsumer.repository.NoticeSubscriptionRepository;
 import gabia.logConsumer.repository.WebhookSubscriptionRepository;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -61,11 +57,11 @@ public class WebhookBusiness {
         for (WebhookSubscription webhookSubscription : webhookSubscriptionList) {
             WebhookDTO.Request request = new WebhookDTO.Request();
             request.setUrl(webhookSubscription.getUrl());
+            request.setEndpoint(webhookSubscription.getEndpoint());
             request.setText(text);
             result.add(request);
-            kafkaTemplate
-                .send(webhookSubscription.getEndpoint().toString().toLowerCase(Locale.ROOT),
-                    request);
+
+            kafkaTemplate.send("webhook", request);
         }
 
         return result;

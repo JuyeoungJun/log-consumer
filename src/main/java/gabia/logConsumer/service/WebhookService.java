@@ -11,6 +11,8 @@ import gabia.logConsumer.dto.ParsedLogDTO;
 import gabia.logConsumer.dto.SlackDTO;
 import gabia.logConsumer.dto.SlackDTO.Attachment;
 import gabia.logConsumer.dto.WebhookDTO;
+import gabia.logConsumer.dto.WebhookMessage;
+import gabia.logConsumer.entity.Enum.WebhookEndpoint;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -62,41 +64,36 @@ public class WebhookService {
     }
 
     /**
-     * Slack Webhook Listener
+     * Kafka Webhook Listener
      *
-     * @param request WebhookDTO.Request
+     * @param request
      * @throws IOException
      */
-    @KafkaListener(topics = "slack", groupId = "slack_consumer", containerFactory = "webhookListener")
-    public void slackConsumer(WebhookDTO.Request request) throws IOException {
+    @KafkaListener(topics = "webhook", groupId = "webhook_consumer", containerFactory = "webhookListener")
+    public void webhookConsumer(WebhookDTO.Request request) throws IOException {
 
-        SlackDTO slackDTO = new SlackDTO();
-        slackDTO.setText(request.getText());
+        WebhookMessage webhookMessage = null;
 
-        Attachment attachment = Attachment.builder()
-            .title("Cron Status Webhook")
-            .text(request.getText())
-            .authorName("Cron Monitoring Server")
-            .build();
+        if (request.getEndpoint().equals(WebhookEndpoint.SLACK)) {
+            webhookMessage = new SlackDTO();
+            webhookMessage.setText(request.getText());
 
-        slackDTO.addAttachment(attachment);
+            Attachment attachment = Attachment.builder()
+                .title("Cron Status")
+                .text(request.getText())
+                .authorName("Cron Monitoring Server")
+                .build();
 
-        webhookBusiness.sendMessage(request, slackDTO);
-    }
+            ((SlackDTO) webhookMessage).addAttachment(attachment);
+        } else if (request.getEndpoint().equals(WebhookEndpoint.HIWORKS)) {
 
-    /**
-     * Hiworks Webhook Listener
-     *
-     * @param request WebhookDTO.Request
-     * @throws IOException
-     */
-    @KafkaListener(topics = "hiworks", groupId = "hiworks_consumer", containerFactory = "webhookListener")
-    public void hiworksConsumer(WebhookDTO.Request request) throws IOException {
+            webhookMessage = new HiworksDTO();
+            webhookMessage.setText(request.getText());
+        }
 
-        HiworksDTO hiworksDTO = new HiworksDTO();
-        hiworksDTO.setText(request.getText());
+        webhookBusiness.sendMessage(request, webhookMessage);
 
-        webhookBusiness.sendMessage(request, hiworksDTO);
+
     }
 
 }
