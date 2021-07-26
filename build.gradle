@@ -35,10 +35,16 @@ dependencies {
 	implementation group: 'com.github.ulisesbocchio', name: 'jasypt-spring-boot-starter', version: '3.0.2'
 	api 'com.influxdb:influxdb-client-java:2.3.0'
 	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.6'
-
+	implementation 'org.springframework.boot:spring-boot-starter-log4j2'
 	//JUnit4 추가
 	testImplementation("org.junit.vintage:junit-vintage-engine") {
 		exclude group: "org.hamcrest", module: "hamcrest-core"
+	}
+}
+
+configurations {
+	all {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
 	}
 }
 
