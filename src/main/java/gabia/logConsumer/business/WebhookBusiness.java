@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -23,6 +24,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 public class WebhookBusiness {
 
@@ -88,8 +90,10 @@ public class WebhookBusiness {
 
         try {
             restTemplate.exchange(webhookDTO.getUrl(), HttpMethod.POST, entity, String.class);
+            log.info("Send Message to {} (url: {})", webhookDTO.getEndpoint(), webhookDTO.getUrl());
             return true;
         } catch (HttpClientErrorException e) {
+            log.error("Fail to send message : {}", e.getMessage());
             return false;
         }
 

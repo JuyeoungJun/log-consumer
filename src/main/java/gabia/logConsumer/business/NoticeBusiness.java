@@ -9,6 +9,7 @@ import gabia.logConsumer.repository.NoticeSubscriptionRepository;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.common.protocol.types.Field.Str;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -19,12 +20,13 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 public class NoticeBusiness {
 
     private final RestTemplate restTemplate;
 
-        private final String url = "http://10.7.27.11:80/notifications/notice";
+    private final String url = "http://10.7.27.11:80/notifications/notice";
 //    private final String url = "http://139.150.64.58:80/notifications/notice";
 
     /**
@@ -51,14 +53,15 @@ public class NoticeBusiness {
             ResponseEntity<String> response = restTemplate
                 .exchange(url, HttpMethod.POST, entity, String.class);
             String result = String.valueOf(response.getStatusCodeValue());
+            log.info("Success to make Notice about {} : {}", parsedLogDTO.getCronJobId().toString(),
+                parsedLogDTO.getContent());
             return result;
         } catch (HttpClientErrorException e) {
             String result = e.getStatusCode().toString();
+            log.error("Fail to send message : {} ", e.getStatusCode().toString());
             return result;
         }
     }
-
-
 
 
 }

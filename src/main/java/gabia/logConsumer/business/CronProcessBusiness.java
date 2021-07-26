@@ -8,6 +8,7 @@ import gabia.logConsumer.repository.CronJobRepository;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 public class CronProcessBusiness {
 
@@ -40,7 +42,6 @@ public class CronProcessBusiness {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(
             cronProcessRequest);
 
-
         if (parsedLogDTO.getNoticeType() == NoticeType.Start) {
 
             // 시작하는 Log 인 경우
@@ -48,16 +49,20 @@ public class CronProcessBusiness {
             ResponseEntity<String> response = restTemplate
                 .exchange(url, HttpMethod.POST, entity, String.class);
             String result = String.valueOf(response.getStatusCodeValue());
+            log.info("Success make cron process (cronJobId: {}, pid: {})",
+                parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid());
             return result;
         } else if (parsedLogDTO.getNoticeType() == NoticeType.End) {
 
-            // 끝나는는 Log 인 경우
+            // 끝나는 Log 인 경우
             restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
             url = url + parsedLogDTO.getPid();
             cronProcessRequest.put("endTime", parsedLogDTO.getTimestamp().toString());
             ResponseEntity<String> response = restTemplate
                 .exchange(url, HttpMethod.PATCH, entity, String.class);
             String result = String.valueOf(response.getStatusCodeValue());
+            log.info("Success update cron process endtime (cronJobId: {}, pid: {})",
+                parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid());
             return result;
         }
 

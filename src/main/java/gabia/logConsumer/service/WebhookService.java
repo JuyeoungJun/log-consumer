@@ -15,10 +15,13 @@ import gabia.logConsumer.dto.WebhookMessage;
 import gabia.logConsumer.entity.Enum.WebhookEndpoint;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
+@Log4j2
 @Service
 public class WebhookService {
 
@@ -45,6 +48,7 @@ public class WebhookService {
 
         // 해당하는 notice를 생성하지 못한 경우
         if (noticeResponse.equals("404")) {
+            log.error("Fail to make notice");
             return;
         }
 
@@ -53,6 +57,7 @@ public class WebhookService {
 
         // 해당하는 CronProcess를 생성하지 못한 경우
         if (cronProcessResponse.equals("404")) {
+            log.error("Fail to make Cron Process");
             return;
         }
 
@@ -92,7 +97,7 @@ public class WebhookService {
         }
 
         webhookBusiness.sendMessage(request, webhookMessage);
-
+        log.info("Send message to {} in {}", request.getUrl(), request.getEndpoint().toString());
 
     }
 
