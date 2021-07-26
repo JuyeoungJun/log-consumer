@@ -128,3 +128,5 @@ jasypt:
       prefix: ENC(
       suffix: )
     pool-size: 1
+logging:
+  config: classpath:Log4j2.xml
