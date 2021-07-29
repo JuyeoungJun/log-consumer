@@ -1,7 +1,6 @@
 package gabia.logConsumer.business;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.MockitoAnnotations.openMocks;
 
@@ -23,17 +22,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @RunWith(MockitoJUnitRunner.class)
 @AutoConfigureMockMvc
 class CronProcessBusinessTest {
+
+    @Value("${spring.cron.server.url}")
+    private String serverUrl;
 
     @Mock
     CronJobRepository cronJobRepository;
@@ -68,9 +72,7 @@ class CronProcessBusinessTest {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(request);
 
-//        String url = String.format("http://localhost:8081/cron-servers/%s/cron-jobs/%s/process/%s",
-//            cronJob.getServer(), cronJob.getId().toString(), "1");
-        String url = String.format("http://10.7.27.11:80/cron-servers/%s/cron-jobs/%s/process/",
+        String url = String.format(serverUrl + "cron-servers/%s/cron-jobs/%s/process/",
             cronJob.getServer(), cronJob.getId().toString(), "1");
 
         Mockito.when(
@@ -86,10 +88,10 @@ class CronProcessBusinessTest {
         parsedLogDTO.setTimestamp(timestamp);
         parsedLogDTO.setPid("1");
 
-        String cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
+        Boolean cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
 
         // then
-        Assertions.assertEquals(cronProcess, "200");
+        Assertions.assertEquals(cronProcess, true);
     }
 
     @Test
@@ -116,14 +118,12 @@ class CronProcessBusinessTest {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(request);
 
-//        String url = String.format("http://localhost:8081/cron-servers/%s/cron-jobs/%s/process/%s",
-//            cronJob.getServer(), cronJob.getId().toString(), "1");
-        String url = String.format("http://10.7.27.11:80/cron-servers/%s/cron-jobs/%s/process/",
+        String url = String.format(serverUrl + "cron-servers/%s/cron-jobs/%s/process/",
             cronJob.getServer(), cronJob.getId().toString());
 
         Mockito.when(
             restTemplate.exchange(
-                url+"1", HttpMethod.PATCH, entity, String.class))
+                url + "1", HttpMethod.PATCH, entity, String.class))
             .thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         // when
@@ -134,10 +134,10 @@ class CronProcessBusinessTest {
         parsedLogDTO.setTimestamp(timestamp);
         parsedLogDTO.setPid("1");
 
-        String cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
+        Boolean cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
 
         // then
-        Assertions.assertEquals(cronProcess, "200");
+        Assertions.assertEquals(cronProcess, true);
     }
 
     @Test
@@ -164,9 +164,7 @@ class CronProcessBusinessTest {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(request);
 
-//        String url = String.format("http://localhost:8081/cron-servers/%s/cron-jobs/%s/process/%s",
-//            cronJob.getServer(), cronJob.getId().toString(), "1");
-        String url = String.format("http://10.7.27.11:80/cron-servers/%s/cron-jobs/%s/process/",
+        String url = String.format(serverUrl + "cron-servers/%s/cron-jobs/%s/process/",
             cronJob.getServer(), cronJob.getId().toString());
 
         Mockito.when(
@@ -212,15 +210,13 @@ class CronProcessBusinessTest {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(request);
 
-//        String url = String.format("http://localhost:8081/cron-servers/%s/cron-jobs/%s/process/%s",
-//            cronJob.getServer(), cronJob.getId().toString(), "1");
-        String url = String.format("http://10.7.27.11:80/cron-servers/%s/cron-jobs/%s/process/",
+        String url = String.format(serverUrl + "cron-servers/%s/cron-jobs/%s/process/",
             cronJob.getServer(), cronJob.getId().toString());
 
         Mockito.when(
             restTemplate.exchange(
                 url, HttpMethod.POST, entity, String.class))
-            .thenReturn(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
         // when
         ParsedLogDTO parsedLogDTO = new ParsedLogDTO();
@@ -230,10 +226,10 @@ class CronProcessBusinessTest {
         parsedLogDTO.setTimestamp(timestamp);
         parsedLogDTO.setPid("1");
 
-        String cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
+        Boolean cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
 
         // then
-        Assertions.assertEquals(cronProcess, "404");
+        Assertions.assertEquals(cronProcess, false);
     }
 
     @Test
@@ -260,17 +256,15 @@ class CronProcessBusinessTest {
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(request);
 
-//        String url = String.format("http://localhost:8081/cron-servers/%s/cron-jobs/%s/procss/%s",
-//            cronJob.getServer(), cronJob.getId().toString(), "1");
-        String url = String.format("http://10.7.27.11:80/cron-servers/%s/cron-jobs/%s/process/",
+        String url = String.format(serverUrl + "cron-servers/%s/cron-jobs/%s/process/",
             cronJob.getServer(), cronJob.getId().toString());
 
         restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
 
         Mockito.when(
             restTemplate.exchange(
-                url+"1", HttpMethod.PATCH, entity, String.class))
-            .thenReturn(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                url + "1", HttpMethod.PATCH, entity, String.class))
+            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
         // when
         ParsedLogDTO parsedLogDTO = new ParsedLogDTO();
@@ -280,9 +274,9 @@ class CronProcessBusinessTest {
         parsedLogDTO.setTimestamp(timestamp);
         parsedLogDTO.setPid("1");
 
-        String cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
+        Boolean cronProcess = cronProcessBusiness.postCronProcess(parsedLogDTO);
 
         // then
-        Assertions.assertEquals(cronProcess, "404");
+        Assertions.assertEquals(cronProcess, false);
     }
 }

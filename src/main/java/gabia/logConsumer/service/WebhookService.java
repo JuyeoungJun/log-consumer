@@ -6,17 +6,12 @@ import gabia.logConsumer.business.CronLogBusiness;
 import gabia.logConsumer.business.CronProcessBusiness;
 import gabia.logConsumer.business.NoticeBusiness;
 import gabia.logConsumer.business.WebhookBusiness;
-import gabia.logConsumer.dto.HiworksDTO;
 import gabia.logConsumer.dto.ParsedLogDTO;
-import gabia.logConsumer.dto.SlackDTO;
-import gabia.logConsumer.dto.SlackDTO.Attachment;
 import gabia.logConsumer.dto.WebhookDTO;
 import gabia.logConsumer.dto.WebhookMessage;
-import gabia.logConsumer.entity.Enum.WebhookEndpoint;
 import gabia.logConsumer.util.WebhookMessageFactory;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -45,20 +40,14 @@ public class WebhookService {
         ParsedLogDTO parsedLogDTO = new ParsedLogDTO().fromMessage(logMessage);
 
         // Cron Monitoring 서버에 Notice Post
-        String noticeResponse = noticeBusiness.postNotice(parsedLogDTO);
-
-        // 해당하는 notice를 생성하지 못한 경우
-        if (noticeResponse.equals("404")) {
-            log.error("Fail to make notice");
+        if (!noticeBusiness.postNotice(parsedLogDTO)) {
+            // 해당하는 notice를 생성하지 못한 경우
             return;
         }
 
         // Cron Monitoring 서버에 CronProcess 생성 Post
-        String cronProcessResponse = cronProcessBusiness.postCronProcess(parsedLogDTO);
-
-        // 해당하는 CronProcess를 생성하지 못한 경우
-        if (cronProcessResponse.equals("404")) {
-            log.error("Fail to make Cron Process");
+        if (!cronProcessBusiness.postCronProcess(parsedLogDTO)) {
+            // 해당하는 CronProcess를 생성하지 못한 경우
             return;
         }
 

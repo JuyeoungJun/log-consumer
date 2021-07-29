@@ -81,12 +81,12 @@ public class WebhookBusiness {
         ObjectMapper mapper = new ObjectMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         String json = mapper.writeValueAsString(webhookMessage);
-        Map<String, Object> slackMessage = mapper.readValue(json,
+        Map<String, Object> message = mapper.readValue(json,
             new TypeReference<Map<String, Object>>() {
             });
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(
-            slackMessage);
+            message);
 
         try {
             restTemplate.exchange(webhookDTO.getUrl(), HttpMethod.POST, entity, String.class);
