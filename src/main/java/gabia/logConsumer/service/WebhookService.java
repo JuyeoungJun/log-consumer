@@ -45,10 +45,8 @@ public class WebhookService {
         ParsedLogDTO parsedLogDTO = new ParsedLogDTO().fromMessage(logMessage);
 
         // Cron Monitoring 서버에 Notice Post
-        String noticeResponse = noticeBusiness.postNotice(parsedLogDTO);
-
-        // 해당하는 notice를 생성하지 못한 경우
-        if (noticeResponse.equals("404")) {
+        if (!noticeBusiness.postNotice(parsedLogDTO)) {
+            // 해당하는 notice를 생성하지 못한 경우
             log.error("Fail to make notice");
             return;
         }
