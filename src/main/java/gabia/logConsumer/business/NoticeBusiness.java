@@ -1,19 +1,12 @@
 package gabia.logConsumer.business;
 
-import gabia.logConsumer.dto.NoticeDTO;
-import gabia.logConsumer.dto.NoticeDTO.Request;
 import gabia.logConsumer.dto.ParsedLogDTO;
-import gabia.logConsumer.entity.CronLog;
-import gabia.logConsumer.repository.CronLogRepository;
-import gabia.logConsumer.repository.NoticeSubscriptionRepository;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.kafka.common.protocol.types.Field.Str;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
