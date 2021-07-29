@@ -46,40 +46,38 @@ public class CronProcessBusiness {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(
             cronProcessRequest);
 
+        HttpMethod httpMethod = null;
+        String status = "";
+
+        // RestTemplate value setting
         if (parsedLogDTO.getNoticeType() == NoticeType.Start) {
 
             // 시작하는 Log 인 경우
             cronProcessRequest.put("startTime", parsedLogDTO.getTimestamp().toString());
-            try {
-                ResponseEntity<String> response = restTemplate
-                    .exchange(url, HttpMethod.POST, entity, String.class);
-                log.info("Success make cron process (cronJobId: {}, pid: {})",
-                    parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid());
-                return true;
-            } catch (HttpClientErrorException e) {
-                log.error("Fail to make cron process (cronJobId: {}, pid: {}) : {}",
-                    parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid(), e.getMessage());
-                return false;
-            }
+            httpMethod = HttpMethod.POST;
+            status = "make";
         } else if (parsedLogDTO.getNoticeType() == NoticeType.End) {
 
             // 끝나는 Log 인 경우
             restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
             url = url + parsedLogDTO.getPid();
             cronProcessRequest.put("endTime", parsedLogDTO.getTimestamp().toString());
-            try {
-                ResponseEntity<String> response = restTemplate
-                    .exchange(url, HttpMethod.PATCH, entity, String.class);
-                log.info("Success update cron process endtime (cronJobId: {}, pid: {})",
-                    parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid());
-                return true;
-            } catch (HttpClientErrorException e) {
-                log.error("Fail to update cron process endtime (cronJobId: {}, pid: {}) : {}",
-                    parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid(), e.getMessage());
-                return false;
-            }
+            httpMethod = HttpMethod.PATCH;
+            status = "update";
         }
-        return true;
+
+        // cron monitoring 서버로 Http Request 요청
+        try {
+            restTemplate.exchange(url, httpMethod, entity, String.class);
+            log.info("Success {} cron process endtime (cronJobId: {}, pid: {})",
+                status, parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid());
+            return true;
+        } catch (HttpClientErrorException e) {
+            log.error("Fail to {} cron process endtime (cronJobId: {}, pid: {}) : {}",
+                status, parsedLogDTO.getCronJobId().toString(), parsedLogDTO.getPid(),
+                e.getMessage());
+            return false;
+        }
     }
 
 }
