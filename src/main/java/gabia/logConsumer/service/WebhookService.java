@@ -47,16 +47,12 @@ public class WebhookService {
         // Cron Monitoring 서버에 Notice Post
         if (!noticeBusiness.postNotice(parsedLogDTO)) {
             // 해당하는 notice를 생성하지 못한 경우
-            log.error("Fail to make notice");
             return;
         }
 
         // Cron Monitoring 서버에 CronProcess 생성 Post
-        String cronProcessResponse = cronProcessBusiness.postCronProcess(parsedLogDTO);
-
-        // 해당하는 CronProcess를 생성하지 못한 경우
-        if (cronProcessResponse.equals("404")) {
-            log.error("Fail to make Cron Process");
+        if (!cronProcessBusiness.postCronProcess(parsedLogDTO)) {
+            // 해당하는 CronProcess를 생성하지 못한 경우
             return;
         }
 
