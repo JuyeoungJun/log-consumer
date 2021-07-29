@@ -16,16 +16,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @RunWith(MockitoJUnitRunner.class)
 @AutoConfigureMockMvc
 class NoticeBusinessTest {
+
+    @Value("${spring.notice.url}")
+    private String url;
 
     @Mock
     private RestTemplate restTemplate;
@@ -53,7 +59,7 @@ class NoticeBusinessTest {
 
 
         Mockito.when(
-            restTemplate.exchange("http://10.7.27.11:80/notifications/notice", HttpMethod.POST,
+            restTemplate.exchange(url, HttpMethod.POST,
                 entity, String.class))
             .thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
@@ -65,10 +71,10 @@ class NoticeBusinessTest {
         parsedLogDTO.setTimestamp(timestamp);
         parsedLogDTO.setPid("1");
 
-        String notice = noticeBusiness.postNotice(parsedLogDTO);
+        Boolean notice = noticeBusiness.postNotice(parsedLogDTO);
 
         // then
-        assertThat(notice).isEqualTo("200");
+        assertThat(notice).isEqualTo(true);
 
     }
 
@@ -90,9 +96,9 @@ class NoticeBusinessTest {
 
 
         Mockito.when(
-            restTemplate.exchange("http://10.7.27.11:80/notifications/notice", HttpMethod.POST,
+            restTemplate.exchange(url, HttpMethod.POST,
                 entity, String.class))
-            .thenReturn(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+            .thenThrow(new HttpClientErrorException(HttpStatus.NOT_FOUND));
 
         // when
         ParsedLogDTO parsedLogDTO = new ParsedLogDTO();
@@ -102,10 +108,10 @@ class NoticeBusinessTest {
         parsedLogDTO.setTimestamp(timestamp);
         parsedLogDTO.setPid("1");
 
-        String notice = noticeBusiness.postNotice(parsedLogDTO);
+        Boolean notice = noticeBusiness.postNotice(parsedLogDTO);
 
         // then
-        assertThat(notice).isEqualTo("404");
+        assertThat(notice).isEqualTo(false);
 
     }
 
